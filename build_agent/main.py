@@ -89,6 +89,7 @@ def main():
     parser.add_argument('--full_name', type=str, help='The full name of the repository (e.g., user/repo).')
     parser.add_argument('--sha', type=str, help='sha')
     parser.add_argument('--root_path', type=str, help='root path')
+    parser.add_argument('--num_turn', type=int, default=15, help='maximum interaction turns')
     parser.add_argument('--llm', type=str, default='gpt-4o-2024-05-13', help='base LLM name')
 
     args = parser.parse_args()
@@ -135,7 +136,7 @@ def main():
 
     configuration_sandbox = Sandbox("python:3.10", full_name, root_path)
     configuration_sandbox.start_container()
-    configuration_agent = Configuration(configuration_sandbox, 'python:3.10', full_name, root_path, 100)
+    configuration_agent = Configuration(configuration_sandbox, 'python:3.10', full_name, root_path, llm="deepseek-chat", max_turn=args.num_turn)
     msg, outer_commands = configuration_agent.run('/tmp', trajectory, waiting_list, conflict_list)
     with open(f'{root_path}/output/{full_name.split("/")[0]}/{full_name.split("/")[1]}/track.json', 'w') as w1:
         w1.write(json.dumps(msg, indent=4))
@@ -144,6 +145,19 @@ def main():
         w2.write(json.dumps(commands, indent=4))
     with open(f'{root_path}/output/{full_name.split("/")[0]}/{full_name.split("/")[1]}/outer_commands.json', 'w') as w3:
         w3.write(json.dumps(outer_commands, indent=4))
+
+    # 在生成 Dockerfile 前，复制必要的工具文件到输出目录
+    output_dir = f"{root_path}/output/{full_name}"
+    # 如果有 outer_commands（需要代码编辑），复制 code_edit.py
+    if len(outer_commands) > 0:
+        code_edit_source = os.path.join(
+            root_path, "Repo2Run/build_agent/tools/code_edit.py"
+        )
+        code_edit_dest = os.path.join(output_dir, "code_edit.py")
+        if os.path.exists(code_edit_source):
+            shutil.copy(code_edit_source, code_edit_dest)
+            print(f"Copied code_edit.py to {output_dir}")
+
     try:
         integrate_dockerfile(f'{root_path}/output/{full_name}')
         msg = f'Generate success!'

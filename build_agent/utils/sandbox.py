@@ -233,7 +233,7 @@ RUN mkdir -p /repo && git config --global --add safe.directory /repo
                 privileged=True,
                 mem_limit='30g',
                 network_mode='bridge',
-                cpuset_cpus='0-19',
+                # cpuset_cpus='0-19',
                 )
 
             # 启动新的 shell 会话
@@ -285,7 +285,7 @@ RUN mkdir -p /repo && git config --global --add safe.directory /repo
             subprocess.run(cmd, check=True, shell=True)
 
             # 把utils/repo中的内容复制到根目录/中
-            cmd = f"docker cp {project_directory}/utils/repo/{self.full_name}/repo {self.container.name}:/"
+            cmd = f"docker cp {self.root_path}/utils/repo/{self.full_name}/repo {self.container.name}:/"
             subprocess.run(cmd, check=True, shell=True)
             return 1
         except Exception as e:

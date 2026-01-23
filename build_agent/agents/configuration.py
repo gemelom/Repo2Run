@@ -233,7 +233,7 @@ VERY IMPORTANT TIPS:
         print(self.init_prompt)
         start_time0 = time.time()
         self.messages = []
-        if "gpt" in self.model:
+        if "gpt" in self.model or "deepseek" in self.model:
             system_message = {"role": "system", "content": self.init_prompt}
             self.messages.append(system_message)
             user_message = {"role": "user", "content": f"[Project root Path]: /repo"}
@@ -306,8 +306,8 @@ VERY IMPORTANT TIPS:
             GPT_end_time = time.time()
             GPT_elasped_time = GPT_end_time - GPT_start_time
             self.outer_commands.append({"GPT_time": GPT_elasped_time})
-            configuration_agent = configuration_agent_list[0]
-            cost_tokens += usage["total_tokens"]
+            configuration_agent = configuration_agent_list
+            cost_tokens += usage.completion_tokens
 
             # 将模型回答加入记忆
             assistant_message = {"role": "assistant", "content": configuration_agent}
@@ -327,10 +327,10 @@ VERY IMPORTANT TIPS:
                 for i in range(len(commands)):
                     self.outer_commands.append({"command": commands[i], "returncode": -2, "time": -1})
                     start_time = time.time()
-                    vdb = subprocess.run("df -h | grep '/dev/vdb' | awk '{print $5}'", shell=True, capture_output=True, text=True)
-                    if float(vdb.stdout.strip().split('%')[0]) > 90:
-                        print('Warning! The disk /dev/vdb has occupied over 90% memories!')
-                        sys.exit(3)
+                    # vdb = subprocess.run("df -h | grep '/dev/vdb' | awk '{print $5}'", shell=True, capture_output=True, text=True)
+                    # if float(vdb.stdout.strip().split('%')[0]) > 90:
+                    #     print('Warning! The disk /dev/vdb has occupied over 90% memories!')
+                    #     sys.exit(3)
                     
                     # 切换python版本
                     if commands[i].strip().startswith('change_python_version'):
@@ -519,7 +519,7 @@ The edit format is as follows:
 """
             else:
                 self.outer_commands[-1]["returncode"] = 2
-                system_res += "ERROR! Your reply does not contain valid block or final answer."
+                system_res += "111 ERROR! Your reply does not contain valid block or final answer."
             
             current_directory, return_code = self.sandbox_session.execute('$pwd$', waiting_list, conflict_list)
             current_directory = '\n[Current directory]:\n' + current_directory + '\n'

@@ -13,15 +13,29 @@
 # limitations under the License. 
 
 
-import openai
+from openai import OpenAI
 import time
+import os
+
+DEEPSEEK_API_KEY = os.getenv("DEEPEEK_API_KEY")
+
+model_configs = {
+    "deepseek-chat": {
+        "base_url": "https://api.deepseek.com",
+        "key": DEEPSEEK_API_KEY,
+    },
+}
+client = OpenAI(
+    base_url=model_configs["deepseek-chat"]["base_url"], api_key=model_configs["deepseek-chat"]["key"]
+)
+
 
 def get_llm_response(model: str, messages, temperature = 0.0, n = 1, max_tokens = 1024):
     max_retry = 5
     count = 0
     while count < max_retry:
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=model,
                 messages=messages,
                 temperature=temperature,
